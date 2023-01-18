@@ -29,6 +29,8 @@ public class PostRepository {
                     resultSet.getLong("count")
     );
 
+
+
     public List<DailyPostCount> groupByCreatedDate(DailyPostCountRequest request) {
         var params = new BeanPropertySqlParameterSource(request);
         String query = String.format("""
@@ -45,6 +47,20 @@ public class PostRepository {
         );
 
         return namedParameterJdbcTemplate.query(query, params, mapper);
+    }
+
+    public void bulkInsert(List<Post> posts) {
+        var sql = String.format("""
+                INSERT INTO %s (memberId, contents, createdDate, createdAt)
+                VALUES (:memberId, :contents, :createdDate, :createdAt)
+                """, TABLE);
+
+        SqlParameterSource[] params = posts
+                .stream()
+                .map(BeanPropertySqlParameterSource::new)
+                .toArray(SqlParameterSource[]::new);
+
+        namedParameterJdbcTemplate.batchUpdate(sql, params);
     }
 
     public Post save(Post post) {
