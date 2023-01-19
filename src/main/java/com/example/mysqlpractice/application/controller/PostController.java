@@ -3,9 +3,15 @@ package com.example.mysqlpractice.application.controller;
 import com.example.mysqlpractice.domain.post.dto.DailyPostCount;
 import com.example.mysqlpractice.domain.post.dto.DailyPostCountRequest;
 import com.example.mysqlpractice.domain.post.dto.PostCommand;
+import com.example.mysqlpractice.domain.post.entity.Post;
 import com.example.mysqlpractice.domain.post.service.PostReadService;
 import com.example.mysqlpractice.domain.post.service.PostWriteService;
+import com.example.mysqlpractice.util.CursorRequest;
+import com.example.mysqlpractice.util.PageCursor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +34,24 @@ public class PostController {
     public List<DailyPostCount> getDailyPostCounts(DailyPostCountRequest request) {
 
         return postReadService.getDailyPostCount(request);
+    }
+
+    @GetMapping("/members/{memberId}")
+    public Page<Post> getPosts(
+            @PathVariable Long memberId,
+            Pageable pageable
+    ) {
+
+        return postReadService.getPosts(memberId, pageable);
+    }
+
+    @GetMapping("/members/{memberId}/by-cursor")
+    public PageCursor<Post> getPostsByCursor(
+            @PathVariable Long memberId,
+            CursorRequest cursorRequest
+    ) {
+
+        return postReadService.getPosts(memberId, cursorRequest);
     }
 
 }
