@@ -7,6 +7,8 @@ import com.example.mysqlpractice.domain.member.repository.MemberNicknameHistoryR
 import com.example.mysqlpractice.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @RequiredArgsConstructor
 @Service
@@ -16,6 +18,7 @@ public class MemberWriteService {
 
     final private MemberNicknameHistoryRepository memberNicknameHistoryRepository;
 
+    @Transactional
     public Member create(RegisterMemberCommand command) {
         /*
          * 목표    - 회원정보(이메일, 닉네임, 생년월일)를 등록한다.
@@ -29,6 +32,8 @@ public class MemberWriteService {
                 .email(command.email())
                 .birthday(command.birthday())
                 .build();
+
+        // TransactionTemplate 을 사용할 수도 있다.
 
         var savedMember = memberRepository.save(member);
         saveMemberNicknameHistory(savedMember);

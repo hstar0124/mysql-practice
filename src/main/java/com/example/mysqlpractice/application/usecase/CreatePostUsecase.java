@@ -16,6 +16,7 @@ public class CreatePostUsecase {
     final private FollowReadService followReadService;
     final private TimelineWriteService timelineWriteService;
 
+    //@Transactional
     public Long execute(PostCommand postCommand) {
         var postId = postWriteService.create(postCommand);
 

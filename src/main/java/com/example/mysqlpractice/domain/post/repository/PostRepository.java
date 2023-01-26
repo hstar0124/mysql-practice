@@ -20,6 +20,7 @@ import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Repository
@@ -36,6 +37,8 @@ public class PostRepository {
             .contents(resultSet.getString("contents"))
             .createdDate(resultSet.getObject("createdDate", LocalDate.class))
             .createdAt(resultSet.getObject("createdAt", LocalDateTime.class))
+            .likeCount(resultSet.getLong("likeCount"))
+            .version(resultSet.getLong("version"))
             .build();
 
 
@@ -64,6 +67,21 @@ public class PostRepository {
 
         return namedParameterJdbcTemplate.query(query, params, mapper);
     }
+
+    public Optional<Post> findById(Long postId, Boolean requiredLock) {
+        var sql = String.format("SELECT * FROM %s WHERE id = :postId ", TABLE);
+        var params = new MapSqlParameterSource().addValue("postId", postId);
+
+        if(requiredLock) {
+            sql += "FOR UPDATE";
+        }
+
+        var nullablePost =  namedParameterJdbcTemplate.queryForObject(sql, params, ROW_MAPPER);
+        return Optional.ofNullable(nullablePost);
+    }
+
+
+
 
     public Page<Post> findAllByMemberId(Long memberId, Pageable pageable) {
 
@@ -217,7 +235,7 @@ public class PostRepository {
         if(post.getId() == null) {
             return insert(post);
         }
-        throw new UnsupportedOperationException("Post는 갱신을 지원하지 않습니다");
+        return update(post);
     }
 
     private Post insert(Post post) {
@@ -239,4 +257,30 @@ public class PostRepository {
     }
 
 
+    private Post update(Post post) {
+        var sql = String.format("""
+                UPDATE %s SET 
+                memberId = :memberId, 
+                contents = :contents, 
+                createdDate = :createdDate,
+                likeCount = :likeCount,
+                createdAt = :createdAt,
+                version = :version + 1
+                WHERE id = :id 
+                AND version = :version
+                """, TABLE);
+
+        SqlParameterSource params = new BeanPropertySqlParameterSource(post);
+        var updatedCount = namedParameterJdbcTemplate.update(sql, params);
+
+        if(updatedCount == 0) {
+            throw new RuntimeException("갱신실패");
+        }
+
+        return post;
+    }
+
+
 }
+
+
